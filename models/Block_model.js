@@ -18,13 +18,13 @@ var BlockClass = class Block {
 			this.nonce = 0;
 			this.prevHash = prevHash.toString();
 			
-			this.hash = BlockClass.calculateHash(this.index.toString(), this.data, this.timestamp.toString(), this.diff.toString(), this.nonce.toString(), this.prevHash.toString());
-			
-			//this.nonce++;
+			do {
+				this.hash = BlockClass.calculateHash(this.index.toString(), this.data, this.timestamp.toString(), this.diff.toString(), this.nonce.toString(), this.prevHash.toString());
+				this.nonce++;
 				
-			//} while(! this.isHashValid());
+			} while(! this.isHashValid());
 			
-			//this.nonce--;
+			this.nonce--;
 		}
 		
 		this.parseToInt();
@@ -35,6 +35,14 @@ var BlockClass = class Block {
 		this.timestamp = parseInt(this.timestamp);
 		this.diff = parseInt(this.diff);
 		this.nonce = parseInt(this.nonce);
+	}
+
+	isHashValid() {
+		for(var i = 0; i < this.diff; i++)
+			if(this.hash.charAt(i) !== "0")
+				return false;
+			
+		return true;
 	}
 	
 	getIndex() {

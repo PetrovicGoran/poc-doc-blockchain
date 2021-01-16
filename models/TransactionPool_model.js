@@ -31,6 +31,33 @@ var TransactionPoolClass = class TransactionPool {
         transactionPool.push(tx);
     }
 
+    static addDiagnosisToTransactionPool(tx, transactionPool) {
+        if (! TransactionClass.validateDiagnosisTransaction(tx)) {   //moj izmjena && ...
+            //unsuccessfulTransactionRequests.push(tx);
+            throw Error('Trying to add invalid tx with diagnosis to pool - transaction (diagnosis) not valid ' + tx.id);
+        }
+
+        transactionPool.push(tx);
+    }
+
+    static addTherapyToTransactionPool(tx, transactionPool) {
+        if (! TransactionClass.validateTherapyTransaction(tx)) {   //moj izmjena && ...
+            //unsuccessfulTransactionRequests.push(tx);
+            throw Error('Trying to add invalid tx with therapy to pool - transaction (therapy) not valid ' + tx.id);
+        }
+
+        transactionPool.push(tx);
+    }
+
+    static addMeasureDataToTransactionPool(tx, transactionPool) {
+        if (! TransactionClass.validateMeasureDataTransaction(tx)) {   //moj izmjena && ...
+            //unsuccessfulTransactionRequests.push(tx);
+            throw Error('Trying to add invalid tx with measureData to pool - transaction (measureData) not valid ' + tx.id);
+        }
+
+        transactionPool.push(tx);
+    }
+
     static hasTxIn(txIn, unspentTxOuts) {
         const foundTxIn = unspentTxOuts.find((uTxO) => {
             return uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex;

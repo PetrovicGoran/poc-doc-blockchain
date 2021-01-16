@@ -2,11 +2,17 @@
 const TxInClass = require("./TxIn_model.js");
 const TxOutClass = require("./TxOut_model.js");
 const UnspentTxOutClass = require("./UnspentTxOut.js");
+//edit
+const DiagnosisClass = require("./Diagnosis_model.js");
+
 //const WalletClass = require("./Wallet_model.js");
 
 var CryptoJS = require('crypto-js');
 var ecdsa = require('elliptic');
 var _ = require('lodash');
+const TherapyClass = require("./Therapy_model.js");
+const MeasureDataClass = require("./MeasureData_model.js");
+
 
 const COINBASE_AMOUNT = 1000;
 const ec = new ecdsa.ec('secp256k1');
@@ -23,11 +29,26 @@ var TransactionClass = class Transaction {
             for(var i = 0; i < this.txOuts.length; i++)
                 this.txOuts[i] = new TxOutClass("", 0, this.txOuts[i]);
 
+            //edit
+            for(var i = 0; i < this.diagnosis.length; i++)
+                this.diagnosis[i] = new DiagnosisClass("", "", "", "", this.diagnosis[i]);
+
+            for(var i = 0; i < this.therapies.length; i++)
+                this.therapies[i] = new TherapyClass("", "", "", "", "", "", "", 0, this.therapies[i]);
+            
+            // TODO - measureData
+            for(var i = 0; i < this.measureData.length; i++)
+                this.measureData[i] = new MeasureDataClass("", "", "", "", this.measureData[i]);
+
         }
         else {
             this.id = "";
             this.txIns = [];
             this.txOuts = [];
+            //edit
+            this.diagnosis = [];
+            this.therapies = [];
+            this.measureData = [];
         }
         
     }
@@ -44,6 +65,19 @@ var TransactionClass = class Transaction {
         return this.txOuts;
     }
 
+    //edit
+    getDiagnosis() {
+        return this.diagnosis;
+    }
+
+    getTherapies() {
+        return this.therapies;
+    }
+
+    getMeasureData() {
+        return this.measureData;
+    }
+
     setTxIns(arrTxIns) {
         this.txIns = arrTxIns;
     }
@@ -54,6 +88,19 @@ var TransactionClass = class Transaction {
 
     setId(id) {
         this.id = id;
+    }
+
+    //edit
+    setDiagnosis(diagnosis) {
+        this.diagnosis = diagnosis;
+    }
+
+    setTherapies(therapies) {
+        this.therapies = therapies;
+    }
+
+    setMeasureData(measureData) {
+        this.measureData = measureData;
     }
 
     toStringForHash() {
@@ -69,12 +116,27 @@ var TransactionClass = class Transaction {
             retS += this.txOuts[i].toStringForHash();
         }
 
+        //edit
+        for(var i = 0; i < this.diagnosis.length; i++) {
+            retS += this.diagnosis[i].toStringForHash();
+        }
+
+        for(var i = 0; i < this.therapies.length; i++) {
+            retS += this.therapies[i].toStringForHash();
+        }
+
+        for(var i = 0; i < this.measureData.length; i++) {
+            retS += this.measureData[i].toStringForHash();
+        }
+
         return retS;
     }
 
-
+    // edited
     static isSameTransaction(tA, tB) {
-        return (tA.id === tB.id && TxInClass.isSameTransactionInArray(tA.txIns, tB.txIns) && TxOutClass.isSameTransactionOutArray(tA.txOuts, tB.txOuts));
+        return (tA.id === tB.id && TxInClass.isSameTransactionInArray(tA.txIns, tB.txIns) && TxOutClass.isSameTransactionOutArray(tA.txOuts, tB.txOuts)
+                && DiagnosisClass.isSameTransactionInArray(tA.diagnosis, tB.diagnosis) && TherapyClass.isSameTransactionInArray(tA.therapies, tB.therapies)
+                && MeasureDataClass.isSameTransactionInArray(tA.measureData, tB.measureData));
     }
 
     //static methods
@@ -87,9 +149,68 @@ var TransactionClass = class Transaction {
         const txOutContent = transaction.txOuts
             .map((txOut) => txOut.address + txOut.amount)
             .reduce((a, b) => a + b, '');
+        
+        //edit
+        const diagnosisContent = transaction.diagnosis
+            .map((diagnose) => diagnose.id + diagnose.doctorPublicKey + diagnose.patientPublicKey + diagnose.name + diagnose.description + diagnose.timestamp)
+            .reduce((a, b) => a + b, '');
 
-        return CryptoJS.SHA256(txInContent + txOutContent).toString();
+        const therapyContent = transaction.therapies
+            .map((therapy) => therapy.id + therapy.doctorPublicKey + therapy.patientPublicKey + therapy.diagnosisId + therapy.name + therapy.description + therapy.startDate + therapy.endDate + therapy.repetition + therapy.timestamp)
+            .reduce((a, b) => a + b, '');
+        
+        // TODO - measureData
+        const measureDataContent = transaction.measureData
+            .map((measureData) => measureData.id + measureData.doctorPublicKey + measureData.patientPublicKey + measureData.arrayToString(measureData.bitsPerMinute) + measureData.arrayToString(measureData.spo2) + measureData.timestamp)
+            .reduce((a, b) => a + b, '');
+
+        //edit
+        return CryptoJS.SHA256(txInContent + txOutContent + diagnosisContent + therapyContent + measureDataContent).toString();
     }
+
+    static validateDiagnosisTransaction(transaction) {
+        if (! TransactionClass.isValidTransactionStructure(transaction)) {
+            console.log("not valid transaction structure");
+            return false;
+        }
+
+        if (TransactionClass.getTransactionId(transaction) != transaction.id) {
+            console.log('invalid tx (diagnosis) id: ' + transaction.id + "\n" + TransactionClass.getTransactionId(transaction) + "\n" + transaction.id);
+            return false;
+        }
+
+        return true;
+    }
+
+    static validateTherapyTransaction(transaction) {
+        if (! TransactionClass.isValidTransactionStructure(transaction)) {
+            console.log("not valid transaction structure");
+            return false;
+        }
+
+        if (TransactionClass.getTransactionId(transaction) != transaction.id) {
+            console.log('invalid tx (diagnosis) id: ' + transaction.id + "\n" + TransactionClass.getTransactionId(transaction) + "\n" + transaction.id);
+            return false;
+        }
+
+        return true;
+    }
+
+    static validateMeasureDataTransaction(transaction) {
+        if (! TransactionClass.isValidTransactionStructure(transaction)) {
+            console.log("not valid transaction structure");
+            return false;
+        }
+
+        if (TransactionClass.getTransactionId(transaction) != transaction.id) {
+            console.log('invalid tx (diagnosis) id: ' + transaction.id + "\n" + MeasureDataClass.getTransactionId(transaction) + "\n" + transaction.id);
+            return false;
+        }
+
+        return true;
+    }
+
+    // TODO - measureData
 
     static validateTransaction(transaction, aUnspentTxOuts) {
 
@@ -145,7 +266,9 @@ var TransactionClass = class Transaction {
         }
 
         for(var i = 0; i < aTransactions.length; i++) {
-            if (! TransactionClass.validateCoinbaseTx(aTransactions[i]) && ! TransactionClass.validateTransaction(aTransactions[i], aUnspentTxOuts)) {
+            if (! TransactionClass.validateCoinbaseTx(aTransactions[i]) && ! TransactionClass.validateTransaction(aTransactions[i], aUnspentTxOuts) 
+                && ! TransactionClass.validateDiagnosisTransaction(aTransactions[i]) && ! TransactionClass.validateTherapyTransaction(aTransactions[i])
+                && ! MeasureDataClass.validateMeasureDataTransaction(aTransactions[i])) {
                 console.log('invalid transaction - not coinbase and normal - in transactionModel->validateBlockTransaction');
                 return false;
             }
@@ -279,7 +402,49 @@ var TransactionClass = class Transaction {
             console.log("invalid txOuts structure");
             return false;
         }
+
+
+        //edit
+        if (! (transaction.diagnosis instanceof Array)) {
+            console.log('invalid diagnosis type in transaction');
+            return false;
+        }
         
+        if (!transaction.diagnosis
+            .map(DiagnosisClass.isValidDiagnosisStructure)
+            .reduce((a, b) => (a && b), true))
+        {
+            console.log("invalid diagnosis structure");
+            return false;
+        }
+
+        if (! (transaction.therapies instanceof Array)) {
+            console.log('invalid therapies type in transaction');
+            return false;
+        }
+        
+        if (!transaction.therapies
+            .map(TherapyClass.isValidTherapyStructure)
+            .reduce((a, b) => (a && b), true))
+        {
+            console.log("invalid therapy structure");
+            return false;
+        }
+
+        if (! (transaction.measureData instanceof Array)) {
+            console.log('invalid diagnosis type in transaction');
+            return false;
+        }
+        
+        if (!transaction.measureData
+            .map(MeasureDataClass.isValidMeasureDataStructure)
+            .reduce((a, b) => (a && b), true))
+        {
+            console.log("invalid measureData structure");
+            return false;
+        }
+        
+
         return true;
     }
 

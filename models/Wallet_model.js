@@ -26,7 +26,6 @@ var WalletClass = class Wallet {
     static initWallet() {
         const newPrivateKey = WalletClass.generatePrivateKey();
         
-        //console.log('new wallet with private key created');
         return newPrivateKey;
     }
 
@@ -146,6 +145,72 @@ var WalletClass = class Wallet {
             
             return txIn;
         });
+        
+        return tx;
+    }
+
+    // TODO
+    static createDiagnosis(doctorPrivateKey, patientPublicKey, name, description, unspentTxOuts, txPool) {
+        const doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
+
+        var DiagnosisClass1 = require("./Diagnosis_model.js");
+
+        var diagnosis = new DiagnosisClass1(doctorPublicKey, patientPublicKey, name, description);
+        diagnosis.setDiagnosisId();
+
+        var TransactionClass1 = require("./Transaction_model.js");
+        const tx = new TransactionClass1();
+        
+        tx.diagnosis.push(diagnosis);
+
+        tx.id = TransactionClass1.getTransactionId(tx);
+        
+        // sign diagnosis
+        tx.diagnosis[tx.diagnosis.length - 1].signature = DiagnosisClass1.signDiagnosis(tx, tx.diagnosis.length - 1, doctorPrivateKey);
+        
+        return tx;
+    }
+
+    static createTherapy(doctorPrivateKey, patientPublicKey, diagnosisId, name, description, startDate, endDate, repetition, unspentTxOuts, txPool) {
+        const doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
+
+        var TherapyClass1 = require("./Therapy_model.js");
+
+        var therapy = new TherapyClass1(doctorPublicKey, patientPublicKey, diagnosisId, name, description, startDate, endDate, repetition);
+        therapy.setTherapyId();
+
+        var TransactionClass1 = require("./Transaction_model.js");
+        const tx = new TransactionClass1();
+        
+        tx.therapies.push(therapy);
+
+        tx.id = TransactionClass1.getTransactionId(tx);
+        
+        // sign therapy
+        tx.therapies[tx.therapies.length - 1].signature = TherapyClass1.signTherapy(tx, tx.therapies.length - 1, doctorPrivateKey);
+
+        // TODO add check if diagnosis from diagnosisId exists or not !!!
+        
+        return tx;
+    }
+
+    static createMeasureData(patientPrivateKey, doctorPublicKey, bitsPerMinute, spo2, unspentTxOuts, txPool) {
+        const patientPublicKey = WalletClass.getPublicFromWallet(patientPrivateKey);
+
+        var MeasureDataClass1 = require("./MeasureData_model.js");
+
+        var measureDataRec = new MeasureDataClass1(patientPublicKey, doctorPublicKey, bitsPerMinute, spo2);
+        measureDataRec.setMeasureDataId();
+
+        var TransactionClass1 = require("./Transaction_model.js");
+        const tx = new TransactionClass1();
+
+        tx.measureData.push(measureDataRec);
+
+        tx.id = TransactionClass1.getTransactionId(tx);
+        
+        // sign measureData
+        tx.measureData[tx.measureData.length - 1].signature = MeasureDataClass1.signMeasureData(tx, tx.measureData.length - 1, patientPrivateKey);
         
         return tx;
     }
