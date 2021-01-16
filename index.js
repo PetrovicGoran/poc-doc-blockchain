@@ -5,6 +5,7 @@ const httpServer = http.Server(app);
 const crypto = require("crypto");
 var ip = require("ip");
 var fs = require("fs");
+const os = require('os');
 
 
 const ConnectedNode = require("./models/connectedNode_model.js");
@@ -14,9 +15,9 @@ var NodeClass = require("./models/Node_model.js");
 const TransactionPool = require("./models/TransactionPool_model.js");
 const TransactionClass = require("./models/Transaction_model.js");
 
-
-saServerIp = "192.168.18.4";
-saServerPort = 3001;
+//testing mpi - working only on linux - virtualmachine ip
+saServerIp = "192.168.18.200";
+saServerPort = 8080;
 
 
 
@@ -34,7 +35,7 @@ unspentTxOutArray = [];
 unsuccessfulTransactionRequests = [];
 
 serverPortNumber = process.argv.slice(2)[0];
-
+serverNumberOfProcessors = os.cpus().length;
 
 
 var cors = require('cors');
@@ -105,7 +106,7 @@ if(!isNaN(serverPortNumber)) {
         console.log("streznik za blockchain zagnan na: " + ip.address().toString() + ":" + serverPortNumber + "...");
     });	
 	
-	
+	console.log("CPUS: " + serverNumberOfProcessors);
 	//preberi blockchain iz datoteke, ce je shranjen (in ce sem jaz SA streznik)
 	readFromFile();
 	

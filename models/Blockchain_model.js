@@ -36,16 +36,32 @@ module.exports = class Blockchain {
 		
 	}
 	
-	createBlock(data = []) {
+	createBlock(data = [], nonceStart = 0, nonceIncrement = 1) {
 		var block = null;
 		
 		if(this.getChainLength() === 0) {
-			block = new Block(0, data, 2, "");
+			block = new Block(0, data, 5, "", null, nonceStart, nonceIncrement);
 		}
 		else {
-			block = new Block(this.getChainLength(), data, 2, this.chain[this.getChainLength() - 1].getHash())
+			block = new Block(this.getChainLength(), data, 5, this.chain[this.getChainLength() - 1].getHash(), null, nonceStart, nonceIncrement)
+		}
+
+		return block;
+		
+		/*if(this.blockIsValid(block)) {
+			this.chain.push(block);
+				
+			//console.log("block added successfully: " + JSON.stringify(block, null, "\t"));
+			return true;
 		}
 		
+		console.log("block was not valid: " + JSON.stringify(block, null, "\t"));
+		
+		return false;*/
+		
+	}
+
+	pushBlock(block) {
 		if(this.blockIsValid(block)) {
 			this.chain.push(block);
 				
@@ -56,7 +72,6 @@ module.exports = class Blockchain {
 		console.log("block was not valid: " + JSON.stringify(block, null, "\t"));
 		
 		return false;
-		
 	}
 	
 	toString() {

@@ -3,7 +3,7 @@ const TransactionClass = require('./Transaction_model.js');
 
 
 var BlockClass = class Block {
-	constructor(index, data, diff, prevHash, jsonFormat = null) {
+	constructor(index, data, diff, prevHash, jsonFormat = null/*, nonceStart = 0, nonceIncrement = 1*/) {
 		if(typeof jsonFormat === "object" && jsonFormat !== null) {
 			Object.assign(this, jsonFormat);
 
@@ -15,16 +15,19 @@ var BlockClass = class Block {
 			this.data = data;
 			this.timestamp = parseInt(Date.now());
 			this.diff = parseInt(diff);
-			this.nonce = 0;
+			
 			this.prevHash = prevHash.toString();
+
+
+			/*this.nonce = nonceStart;
 			
 			do {
 				this.hash = BlockClass.calculateHash(this.index.toString(), this.data, this.timestamp.toString(), this.diff.toString(), this.nonce.toString(), this.prevHash.toString());
-				this.nonce++;
+				this.nonce += nonceIncrement;
 				
 			} while(! this.isHashValid());
 			
-			this.nonce--;
+			this.nonce--;*/
 		}
 		
 		this.parseToInt();
