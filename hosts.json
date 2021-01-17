@@ -1,0 +1,15 @@
+{
+    "hosts" :
+    [
+        {
+            "hostname": "localhost",
+            "processes": 2
+        },
+        {
+            "hostname": "192.168.18.200",
+            "processes": 2
+        }
+    ],
+
+    "mainFile" : "mpi_clients.js"
+}

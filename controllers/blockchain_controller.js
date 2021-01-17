@@ -100,9 +100,9 @@ module.exports = {
 		//transactionPool = [];
 	},
 
-	abortHandler : function(){
+	/*abortHandler : function(){
 		MPI.abort();
-    },
+    },*/
 	
 	createNewBlock: function(req, res) {
 		console.log("creating new block...");
