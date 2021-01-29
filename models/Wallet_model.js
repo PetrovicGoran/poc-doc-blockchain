@@ -171,12 +171,12 @@ var WalletClass = class Wallet {
         return tx;
     }
 
-    static createTherapy(doctorPrivateKey, patientPublicKey, diagnosisId, name, description, startDate, endDate, repetition, unspentTxOuts, txPool) {
+    static createTherapy(doctorPrivateKey, patientPublicKey, diagnosisId, name, description, triggerCode, startDate, endDate, repetition, unspentTxOuts, txPool) {
         const doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
 
         var TherapyClass1 = require("./Therapy_model.js");
 
-        var therapy = new TherapyClass1(doctorPublicKey, patientPublicKey, diagnosisId, name, description, startDate, endDate, repetition);
+        var therapy = new TherapyClass1(doctorPublicKey, patientPublicKey, diagnosisId, name, description, triggerCode, startDate, endDate, repetition);
         therapy.setTherapyId();
 
         var TransactionClass1 = require("./Transaction_model.js");
@@ -211,6 +211,27 @@ var WalletClass = class Wallet {
         
         // sign measureData
         tx.measureData[tx.measureData.length - 1].signature = MeasureDataClass1.signMeasureData(tx, tx.measureData.length - 1, patientPrivateKey);
+        
+        return tx;
+    }
+
+    static createAnalisys(doctorPrivateKey, patientPublicKey, diagnosisId, base64AsciiImage, title, description, unspentTxOuts, txPool) {
+        const doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
+
+        var AnalisysClass = require("./Analisys_model.js");
+
+        var analisys = new AnalisysClass(doctorPublicKey, patientPublicKey, diagnosisId, title, description, base64AsciiImage);
+        analisys.setAnalisysId();
+
+        var TransactionClass1 = require("./Transaction_model.js");
+        const tx = new TransactionClass1();
+        
+        tx.analisys.push(analisys);
+
+        tx.id = TransactionClass1.getTransactionId(tx);
+        
+        // sign diagnosis
+        tx.analisys[tx.analisys.length - 1].signature = AnalisysClass.signAnalisys(tx, tx.analisys.length - 1, doctorPrivateKey);
         
         return tx;
     }

@@ -58,6 +58,15 @@ var TransactionPoolClass = class TransactionPool {
         transactionPool.push(tx);
     }
 
+    static addAnalisysToTransactionPool(tx, transactionPool) {
+        if (! TransactionClass.validateAnalisysTransaction(tx)) {   //moj izmjena && ...
+            //unsuccessfulTransactionRequests.push(tx);
+            throw Error('Trying to add invalid tx with analisys to pool - transaction (analisys) not valid ' + tx.id);
+        }
+
+        transactionPool.push(tx);
+    }
+
     static hasTxIn(txIn, unspentTxOuts) {
         const foundTxIn = unspentTxOuts.find((uTxO) => {
             return uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex;

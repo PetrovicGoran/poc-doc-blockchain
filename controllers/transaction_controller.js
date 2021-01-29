@@ -11,6 +11,7 @@ var _ = require('lodash');
 const DiagnosisClass = require('../models/Diagnosis_model.js');
 const TherapyClass = require('../models/Therapy_model.js');
 const MeasureDataClass = require('../models/MeasureData_model.js');
+const AnalisysClass = require('../models/Analisys_model.js');
 
 module.exports = {
 	
@@ -70,6 +71,7 @@ module.exports = {
         var diagnosisId = req.body.diagnosisId;
         var name = req.body.therapyName;
         var description = req.body.therapyDescription;
+        var triggerCode = req.body.therapyTriggerCode;
         var startDate = req.body.therapyStartDate;
         var endDate = req.body.therapyEndDate;
         var repetition = req.body.therapyRepetition;
@@ -77,7 +79,7 @@ module.exports = {
         var myUnspentTxOuts = unspentTxOutArray;
 
         // create therapy
-        var therapy = WalletClass.createTherapy(doctorPrivateKey, patientPublicKey, diagnosisId, name, description, startDate, endDate, repetition, myUnspentTxOuts, TransactionPoolClass.getTransactionPool(transactionPool));
+        var therapy = WalletClass.createTherapy(doctorPrivateKey, patientPublicKey, diagnosisId, name, description, triggerCode, startDate, endDate, repetition, myUnspentTxOuts, TransactionPoolClass.getTransactionPool(transactionPool));
 
         // add created therapy to transaction pool
         TransactionPoolClass.addTherapyToTransactionPool(therapy, transactionPool);
@@ -115,6 +117,31 @@ module.exports = {
         // return id of created measureData (to know to which measureData was inserted in blockchain)
         return res.json(measureData.getId());
     },
+
+    createAnalisys: function(req, res) {
+        var doctorPrivateKey = req.body.doctorPrivateKey;
+        var patientPublicKey = req.body.patientPublicKey;
+        var diagnosisId = req.body.diagnosisId;
+        var base64AsciiImageString = req.body.analisysBase64AsciiImageString;
+        var title = req.body.analisysTitle;
+        var description = req.body.analisysDescription;
+
+        var myUnspentTxOuts = unspentTxOutArray;
+
+        // create diagnosis
+        var analisys = WalletClass.createAnalisys(doctorPrivateKey, patientPublicKey, diagnosisId, base64AsciiImageString, title, description, myUnspentTxOuts, TransactionPoolClass.getTransactionPool(transactionPool));
+
+        // add created diagnosis to transaction pool
+        TransactionPoolClass.addAnalisysToTransactionPool(analisys, transactionPool);
+
+        console.log("finished making transaction (analisys), sending everyone synchronization...");
+        
+        //poslati synchronyze svima v omrezju za TransactionPool
+        connected.sendHttpPostToAll(ip.address().toString(), parseInt(serverPortNumber), "/transaction/synchronyzeTransactionPool", JSON.stringify(transactionPool));
+        
+        // return id of created diagnosis (to know to which diagnosis to bind therapies)
+        return res.json(analisys.getId());
+    },
 	
 	synchronize: function(req, res) {
 
@@ -130,6 +157,11 @@ module.exports = {
                 trx.id = transPoolB[i].id;
                 trx.txIns = [];
                 trx.txOuts = [];
+                trx.diagnosis = [];
+                trx.therapies = [];
+                trx.measureData = [];
+                trx.analisys = [];
+
 
                 for(var j = 0; j < transPoolB[i].txIns.length; j++) {
                     var txInInside = new TxInClass();
@@ -170,6 +202,7 @@ module.exports = {
                     therapy.diagnosisId = transPoolB[i].therapies[j].diagnosisId;
                     therapy.name = transPoolB[i].therapies[j].name;
                     therapy.description = transPoolB[i].therapies[j].description;
+                    therapy.triggerCode = transPoolB[i].therapies[j].triggerCode;
                     therapy.startDate = transPoolB[i].therapies[j].startDate;
                     therapy.endDate = transPoolB[i].therapies[j].endDate;
                     therapy.repetition = transPoolB[i].therapies[j].repetition;
@@ -193,6 +226,22 @@ module.exports = {
                     measureData.signature = transPoolB[i].measureData[j].signature;
 
                     trx.measureData.push(measureData);
+                }
+
+                //for analisys
+                for(var j = 0; j < transPoolB[i].analisys.length; j++) {
+                    var analisys = new AnalisysClass();
+                    analisys.id = transPoolB[i].analisys[j].id;
+                    analisys.doctorPublicKey = transPoolB[i].analisys[j].doctorPublicKey;
+                    analisys.patientPublicKey = transPoolB[i].analisys[j].patientPublicKey;
+                    analisys.diagnosisId = transPoolB[i].analisys[j].diagnosisId;
+                    analisys.base64AsciiImageString = transPoolB[i].analisys[j].base64AsciiImageString;
+                    analisys.title = transPoolB[i].analisys[j].title;
+                    analisys.description = transPoolB[i].analisys[j].description;
+                    analisys.timestamp = transPoolB[i].analisys[j].timestamp;
+                    analisys.signature = transPoolB[i].analisys[j].signature;
+
+                    trx.analisys.push(analisys);
                 }
 
                 transPoolRecv.push(trx);

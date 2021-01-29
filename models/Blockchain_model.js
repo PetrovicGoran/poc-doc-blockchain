@@ -94,7 +94,7 @@ module.exports = class Blockchain {
 			var myHash = Block.calculateHash(this.chain[i].getIndex(), this.chain[i].getData(), this.chain[i].getTimestamp(), this.chain[i].getDiff(), this.chain[i].getNonce(), this.chain[i].getPrevHash());
 			
 			if(this.chain[i].getHash().toString() !== myHash.toString()) {
-				console.log("hash not valid: \nmymyHash: " + myHash.toString() + "\nRealHash: " + this.chain[i].getHash().toString());
+				console.log("hash not valid: \nmyHash: " + myHash.toString() + "\nRealHash: " + this.chain[i].getHash().toString());
 				return false;
 			}
 			

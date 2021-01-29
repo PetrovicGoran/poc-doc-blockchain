@@ -12,6 +12,7 @@ var ecdsa = require('elliptic');
 var _ = require('lodash');
 const TherapyClass = require("./Therapy_model.js");
 const MeasureDataClass = require("./MeasureData_model.js");
+const AnalisysClass = require("./Analisys_model.js")
 
 
 const COINBASE_AMOUNT = 1000;
@@ -34,11 +35,14 @@ var TransactionClass = class Transaction {
                 this.diagnosis[i] = new DiagnosisClass("", "", "", "", this.diagnosis[i]);
 
             for(var i = 0; i < this.therapies.length; i++)
-                this.therapies[i] = new TherapyClass("", "", "", "", "", "", "", 0, this.therapies[i]);
+                this.therapies[i] = new TherapyClass("", "", "", "", "", 0, "", "", 0, this.therapies[i]);
             
             // TODO - measureData
             for(var i = 0; i < this.measureData.length; i++)
                 this.measureData[i] = new MeasureDataClass("", "", "", "", this.measureData[i]);
+
+            for(var i = 0; i < this.analisys.length; i++)
+                this.analisys[i] = new AnalisysClass("", "", "", "", "", "", this.analisys[i]);
 
         }
         else {
@@ -49,6 +53,7 @@ var TransactionClass = class Transaction {
             this.diagnosis = [];
             this.therapies = [];
             this.measureData = [];
+            this.analisys = [];
         }
         
     }
@@ -78,6 +83,10 @@ var TransactionClass = class Transaction {
         return this.measureData;
     }
 
+    getAnalisys() {
+        return this.analisys;
+    }
+
     setTxIns(arrTxIns) {
         this.txIns = arrTxIns;
     }
@@ -101,6 +110,10 @@ var TransactionClass = class Transaction {
 
     setMeasureData(measureData) {
         this.measureData = measureData;
+    }
+
+    setAnalisys(analisys) {
+        this.analisys = analisys;
     }
 
     toStringForHash() {
@@ -129,6 +142,10 @@ var TransactionClass = class Transaction {
             retS += this.measureData[i].toStringForHash();
         }
 
+        for(var i = 0; i < this.analisys.length; i++) {
+            retS += this.analisys[i].toStringForHash();
+        }
+
         return retS;
     }
 
@@ -136,7 +153,7 @@ var TransactionClass = class Transaction {
     static isSameTransaction(tA, tB) {
         return (tA.id === tB.id && TxInClass.isSameTransactionInArray(tA.txIns, tB.txIns) && TxOutClass.isSameTransactionOutArray(tA.txOuts, tB.txOuts)
                 && DiagnosisClass.isSameTransactionInArray(tA.diagnosis, tB.diagnosis) && TherapyClass.isSameTransactionInArray(tA.therapies, tB.therapies)
-                && MeasureDataClass.isSameTransactionInArray(tA.measureData, tB.measureData));
+                && MeasureDataClass.isSameTransactionInArray(tA.measureData, tB.measureData) && AnalisysClass.isSameTransactionInArray(tA.analisys, tB.analisys));
     }
 
     //static methods
@@ -156,7 +173,7 @@ var TransactionClass = class Transaction {
             .reduce((a, b) => a + b, '');
 
         const therapyContent = transaction.therapies
-            .map((therapy) => therapy.id + therapy.doctorPublicKey + therapy.patientPublicKey + therapy.diagnosisId + therapy.name + therapy.description + therapy.startDate + therapy.endDate + therapy.repetition + therapy.timestamp)
+            .map((therapy) => therapy.id + therapy.doctorPublicKey + therapy.patientPublicKey + therapy.diagnosisId + therapy.name + therapy.description + therapy.triggerCode + therapy.startDate + therapy.endDate + therapy.repetition + therapy.timestamp)
             .reduce((a, b) => a + b, '');
         
         // TODO - measureData
@@ -164,8 +181,12 @@ var TransactionClass = class Transaction {
             .map((measureData) => measureData.id + measureData.doctorPublicKey + measureData.patientPublicKey + measureData.arrayToString(measureData.bitsPerMinute) + measureData.arrayToString(measureData.spo2) + measureData.timestamp)
             .reduce((a, b) => a + b, '');
 
+        const analisysContent = transaction.analisys
+            .map((analisys) => analisys.id + analisys.doctorPublicKey + analisys.patientPublicKey + analisys.diagnosisId + analisys.base64AsciiImageString + analisys.title + analisys.description + analisys.timestamp)
+            .reduce((a, b) => a + b, '');
+
         //edit
-        return CryptoJS.SHA256(txInContent + txOutContent + diagnosisContent + therapyContent + measureDataContent).toString();
+        return CryptoJS.SHA256(txInContent + txOutContent + diagnosisContent + therapyContent + measureDataContent + analisysContent).toString();
     }
 
     static validateDiagnosisTransaction(transaction) {
@@ -189,7 +210,7 @@ var TransactionClass = class Transaction {
         }
 
         if (TransactionClass.getTransactionId(transaction) != transaction.id) {
-            console.log('invalid tx (diagnosis) id: ' + transaction.id + "\n" + TransactionClass.getTransactionId(transaction) + "\n" + transaction.id);
+            console.log('invalid tx (therapy) id: ' + transaction.id + ", calculated hash: " + TransactionClass.getTransactionId(transaction));
             return false;
         }
 
@@ -203,7 +224,21 @@ var TransactionClass = class Transaction {
         }
 
         if (TransactionClass.getTransactionId(transaction) != transaction.id) {
-            console.log('invalid tx (diagnosis) id: ' + transaction.id + "\n" + MeasureDataClass.getTransactionId(transaction) + "\n" + transaction.id);
+            console.log('invalid tx (measureData) id: ' + transaction.id + "\n" + TransactionClass.getTransactionId(transaction) + "\n" + transaction.id);
+            return false;
+        }
+
+        return true;
+    }
+
+    static validateAnalisysTransaction(transaction) {
+        if (! TransactionClass.isValidTransactionStructure(transaction)) {
+            console.log("not valid transaction structure");
+            return false;
+        }
+
+        if (TransactionClass.getTransactionId(transaction) != transaction.id) {
+            console.log('invalid tx (analisys) id: ' + transaction.id + "\n" + TransactionClass.getTransactionId(transaction) + "\n" + transaction.id);
             return false;
         }
 
@@ -268,7 +303,7 @@ var TransactionClass = class Transaction {
         for(var i = 0; i < aTransactions.length; i++) {
             if (! TransactionClass.validateCoinbaseTx(aTransactions[i]) && ! TransactionClass.validateTransaction(aTransactions[i], aUnspentTxOuts) 
                 && ! TransactionClass.validateDiagnosisTransaction(aTransactions[i]) && ! TransactionClass.validateTherapyTransaction(aTransactions[i])
-                && ! MeasureDataClass.validateMeasureDataTransaction(aTransactions[i])) {
+                && ! TransactionClass.validateMeasureDataTransaction(aTransactions[i]) && ! TransactionClass.validateAnalisysTransaction(aTransactions[i])) {
                 console.log('invalid transaction - not coinbase and normal - in transactionModel->validateBlockTransaction');
                 return false;
             }
@@ -301,7 +336,7 @@ var TransactionClass = class Transaction {
         }
 
         if (TransactionClass.getTransactionId(transaction) !== transaction.id) {
-            console.log('invalid coinbase tx id: ' + transaction.id);
+            console.log('invalid coinbase tx id: ' + transaction.id + " , my id: " + TransactionClass.getTransactionId(transaction));
             return false;
         }
 
@@ -441,6 +476,19 @@ var TransactionClass = class Transaction {
             .reduce((a, b) => (a && b), true))
         {
             console.log("invalid measureData structure");
+            return false;
+        }
+
+        if (! (transaction.analisys instanceof Array)) {
+            console.log('invalid analisys type in transaction');
+            return false;
+        }
+        
+        if (!transaction.analisys
+            .map(AnalisysClass.isValidAnalisysStructure)
+            .reduce((a, b) => (a && b), true))
+        {
+            console.log("invalid analisys structure");
             return false;
         }
         

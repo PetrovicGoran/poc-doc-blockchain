@@ -8,6 +8,7 @@ router.post("/newTransaction", transactionController.createTransaction);
 router.post("/newDiagnosisTransaction", transactionController.createDiagnosis);
 router.post("/newTherapyTransaction", transactionController.createTherapy);
 router.post("/newMeasureDataTransaction", transactionController.createMeasureData);
+router.post("/newAnalisysTransaction", transactionController.createAnalisys);
 router.post("/synchronyzeTransactionPool", transactionController.synchronize);
 router.post("/myTransactions", transactionController.getMyTransactions);
 

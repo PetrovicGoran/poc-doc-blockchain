@@ -9,7 +9,7 @@ const { parse } = require("path");
 const ec = new ecdsa.ec('secp256k1');
 
 var TherapyClass = class Therapy {
-	constructor(doctorPublicKey, patientPublicKey, diagnosisId, name, description, startDate, endDate, repetition, jsonFormat = null) {
+	constructor(doctorPublicKey, patientPublicKey, diagnosisId, name, description, triggerCode, startDate, endDate, repetition, jsonFormat = null) {
 		if(typeof jsonFormat === "object" && jsonFormat !== null) {
             Object.assign(this, jsonFormat);
 		}
@@ -20,6 +20,7 @@ var TherapyClass = class Therapy {
             this.diagnosisId = diagnosisId;
 			this.name = name;
             this.description = description;
+            this.triggerCode = triggerCode;
             this.startDate = startDate;
             this.endDate = endDate;
             this.repetition = repetition;
@@ -31,6 +32,7 @@ var TherapyClass = class Therapy {
     }
 
     parseToInt() {
+        this.triggerCode = parseInt(this.triggerCode);
         this.repetition = parseInt(this.repetition);
         this.timestamp = parseInt(this.timestamp);
     }
@@ -38,7 +40,7 @@ var TherapyClass = class Therapy {
     getTherapyId() {        
         //edit
         const therapyContent = this.doctorPublicKey + this.patientPublicKey + this.diagnosisId + this.name + this.description 
-            + this.startDate + this.endDate + this.repetition + this.timestamp;
+            + this.triggerCode + this.startDate + this.endDate + this.repetition + this.timestamp;
 
         //edit
         return CryptoJS.SHA256(therapyContent).toString();
@@ -62,6 +64,10 @@ var TherapyClass = class Therapy {
 	
 	getDescription() {
 		return this.description;
+    }
+
+    getTriggerCode() {
+		return this.triggerCode;
     }
 
     getStartDate() {
@@ -90,7 +96,7 @@ var TherapyClass = class Therapy {
 	
 	toString() {
         var ret = "doctorPublicKey: " + this.doctorPublicKey + " patientPublicKey: " + this.patientPublicKey + " diagnosisId: " + this.diagnosisId + " name: " + this.name + " description: " + this.description
-            + " startDate: "+ this.startDate + " endDate: " + this.endDate + " repetition: " + this.repetition + " id: " + this.id + " signature: " + this.signature + " timestamp: " + this.timestamp;
+            "triggerCode: " + this.triggerCode + " startDate: "+ this.startDate + " endDate: " + this.endDate + " repetition: " + this.repetition + " id: " + this.id + " signature: " + this.signature + " timestamp: " + this.timestamp;
 
         return ret;
     }
@@ -114,7 +120,7 @@ var TherapyClass = class Therapy {
 
         for(var i = 0; i < therapyA.length; i++) {
             for(var j = 0; j < therapyB.length; j++) {
-                if(therapyA[i].name === therapyB[j].name && therapyA[i].description === therapyB[j].description 
+                if(therapyA[i].name === therapyB[j].name && therapyA[i].description === therapyB[j].description && therapyA[i].triggerCode === therapyB[j].triggerCode  
                     && therapyA[i].doctorPublicKey === therapyB[j].doctorPublicKey && therapyA[i].patientPublicKey === therapyB[j].patientPublicKey && therapyA[i].diagnosisId === therapyB[j].diagnosisId
                     && therapyA[i].startDate === therapyB[j].startDate && therapyA[i].endDate === therapyB[j].endDate && therapyA[i].repetition == therapyB[j].repetition
                     && therapyA[i].id === therapyB[j].id && therapyA[i].signature === therapyB[j].signature 
@@ -162,6 +168,11 @@ var TherapyClass = class Therapy {
 
         else if (typeof therapy.description !== 'string') {
             console.log('invalid description type in Therapy');
+            return false;
+        }
+
+        else if (typeof therapy.triggerCode !== 'number') {
+            console.log('invalid triggerCode type in Therapy');
             return false;
         }
 

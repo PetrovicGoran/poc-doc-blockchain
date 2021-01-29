@@ -83,7 +83,9 @@ var NodeClass = class Node {
 	}
 	
 	sendHttpPost(path, data) {
-		
+		//if(data != null && data != undefined)
+		//	data = data.toString("utf-8");
+
 		const sendData = JSON.stringify({"data": data});
 		
 		const options = {
@@ -92,7 +94,7 @@ var NodeClass = class Node {
 			path: path.toString(),
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type': 'application/json; charset=utf-8',
 				'Content-Length': sendData.length
 			}
 		};

@@ -18,6 +18,14 @@ var BlockClass = class Block {
 			this.nonce = 0;
 			this.prevHash = prevHash.toString();
 			
+			/*this.transString = "";
+			for(var i = 0; i < this.data.length; i++) {
+				this.transString += this.data[i].toStringForHash();
+			}
+
+			console.log("TO CREATE NEW BLOCK: " + this.index.toString() + this.transString + this.timestamp.toString() + this.diff.toString() + this.nonce.toString() + this.prevHash.toString());
+			*/
+			
 			do {
 				this.hash = BlockClass.calculateHash(this.index.toString(), this.data, this.timestamp.toString(), this.diff.toString(), this.nonce.toString(), this.prevHash.toString());
 				this.nonce++;

@@ -1,6 +1,7 @@
 var Blockchain = require('../models/Blockchain_model.js');
 var ip = require("ip");
 var TransactionClass = require('../models/Transaction_model.js');
+var WalletClass = require("../models/Wallet_model.js");
 
 module.exports = {
 	
@@ -31,7 +32,7 @@ module.exports = {
 	
 	synchronize: function(req, res) {
 		nodeLog.addLogItem("synchronyzeBlockchains", req.connection.remoteAddress, req.body.data);
-
+		
 		console.log("synchronyzing blockchains...");
 		
 		
@@ -84,6 +85,258 @@ module.exports = {
 		}
 		
 		return res.json("success");
+	},
+
+	getDiagnosisPatient: function(req, res) {
+		var patientPublicKey = req.body.patientPublicKey;
+		var chain = blockchain.getBlockchain();
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].diagnosis.length; k++) {
+					if(chain[i].data[j].diagnosis[k].getPatientPublicKey() === patientPublicKey)
+						toReturn.push(chain[i].data[j].diagnosis[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getDiagnosisDoctor: function(req, res) {
+		var doctorPrivateKey = req.body.doctorPrivateKey;
+		var chain = blockchain.getBlockchain();
+
+		var doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].diagnosis.length; k++) {
+					if(chain[i].data[j].diagnosis[k].getDoctorPublicKey() === doctorPublicKey)
+						toReturn.push(chain[i].data[j].diagnosis[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getDiagnosis: function(req, res) {
+		var id = req.params.id
+		var chain = blockchain.getBlockchain();
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].diagnosis.length; k++) {
+					if(chain[i].data[j].diagnosis[k].id === id)
+						return res.json(chain[i].data[j].diagnosis[k]);
+				}
+			}
+		}
+
+		return res.json(null);
+	},
+
+	// branje terapije
+	getTherapiesPatient: function(req, res) {
+		var patientPublicKey = req.body.patientPublicKey;
+		var chain = blockchain.getBlockchain();
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].therapies.length; k++) {
+					if(chain[i].data[j].therapies[k].getPatientPublicKey() === patientPublicKey)
+						toReturn.push(chain[i].data[j].therapies[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getTherapiesDoctor: function(req, res) {
+		var doctorPrivateKey = req.body.doctorPrivateKey;
+		var chain = blockchain.getBlockchain();
+
+		var doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].therapies.length; k++) {
+					if(chain[i].data[j].therapies[k].getDoctorPublicKey() === doctorPublicKey)
+						toReturn.push(chain[i].data[j].therapies[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getTherapy: function(req, res) {
+		var id = req.params.id
+		var chain = blockchain.getBlockchain();
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].therapies.length; k++) {
+					if(chain[i].data[j].therapies[k].id === id)
+						return res.json(chain[i].data[j].therapies[k]);
+				}
+			}
+		}
+
+		return res.json(null);
+	},
+
+	// branje measureData
+	getMeasureDataPatient: function(req, res) {
+		var patientPrivateKey = req.body.patientPrivateKey;
+		var chain = blockchain.getBlockchain();
+
+		var patientPublicKey = WalletClass.getPublicFromWallet(patientPrivateKey);
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].measureData.length; k++) {
+					if(chain[i].data[j].measureData[k].getPatientPublicKey() === patientPublicKey)
+						toReturn.push(chain[i].data[j].measureData[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getMeasureDataDoctor: function(req, res) {
+		var doctorPublicKey = req.body.doctorPublicKey;
+		var chain = blockchain.getBlockchain();
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].measureData.length; k++) {
+					if(chain[i].data[j].measureData[k].getDoctorPublicKey() === doctorPublicKey)
+						toReturn.push(chain[i].data[j].measureData[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getMeasureData: function(req, res) {
+		var id = req.params.id
+		var chain = blockchain.getBlockchain();
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].measureData.length; k++) {
+					if(chain[i].data[j].measureData[k].id === id)
+						return res.json(chain[i].data[j].measureData[k]);
+				}
+			}
+		}
+
+		return res.json(null);
+	},
+
+
+	// branje analisys
+
+	getAnalisysPatient: function(req, res) {
+		var patientPublicKey = req.body.patientPublicKey;
+		var chain = blockchain.getBlockchain();
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].analisys.length; k++) {
+					if(chain[i].data[j].analisys[k].getPatientPublicKey() === patientPublicKey)
+						toReturn.push(chain[i].data[j].analisys[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getAnalisysDoctor: function(req, res) {
+		var doctorPrivateKey = req.body.doctorPrivateKey;
+		var chain = blockchain.getBlockchain();
+
+		var doctorPublicKey = WalletClass.getPublicFromWallet(doctorPrivateKey);
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].analisys.length; k++) {
+					if(chain[i].data[j].analisys[k].getDoctorPublicKey() === doctorPublicKey)
+						toReturn.push(chain[i].data[j].analisys[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getAnalisysByDiagnosisId: function(req, res) {
+		var diagnosisId = req.body.diagnosisId;
+		var chain = blockchain.getBlockchain();
+
+		var toReturn = [];
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].analisys.length; k++) {
+					if(chain[i].data[j].analisys[k].getDiagnosisId() === diagnosisId)
+						toReturn.push(chain[i].data[j].analisys[k]);
+				}
+			}
+		}
+
+		return res.json(toReturn);
+	},
+
+	getAnalisys: function(req, res) {
+		var id = req.params.id
+		var chain = blockchain.getBlockchain();
+
+		for(var i = 0; i < chain.length; i++) {
+			// isci skozi vse transakcije v bloku:
+			for(var j = 0; j < chain[i].data.length; j++) {
+				for(var k = 0; k < chain[i].data[j].analisys.length; k++) {
+					if(chain[i].data[j].analisys[k].id === id)
+						return res.json(chain[i].data[j].analisys[k]);
+				}
+			}
+		}
+
+		return res.json(null);
 	}
 	
 };

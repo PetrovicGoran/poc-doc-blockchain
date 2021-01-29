@@ -57,9 +57,8 @@ module.exports = {
 	
 	nodeNetworkChanged: function(req, res) {
 		nodeLog.addLogItem("nodeNetworkChanged", req.connection.remoteAddress, req.body.data);
-
 		connected = new ConnectedNodes(JSON.parse(req.body.data));
-		
+
 		if(ip.address().toString() === saServerIp && parseInt(serverPortNumber) === saServerPort && connected.getConnectedNodesLength() <= 1) {	//samo server je v p2p omrezju
 			writeToFile();
 		}

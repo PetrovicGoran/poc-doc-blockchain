@@ -15,7 +15,7 @@ const TransactionPool = require("./models/TransactionPool_model.js");
 const TransactionClass = require("./models/Transaction_model.js");
 
 
-saServerIp = "192.168.18.4";
+saServerIp = "localhost";
 saServerPort = 3001;
 
 
@@ -63,6 +63,20 @@ var syncInterval = setInterval(function() {
 	
 }, 5000);
 
+var mineInterval = setInterval(function() {
+	//console.log("checking who is online...");
+	if(transactionPool.length > 0) {
+		console.log("creating new block from timeout 10s");
+		blockchain.createBlock(transactionPool);
+		transactionPool = [];
+
+		console.log("sending synchronyze to all others...");
+		connected.sendHttpPostToAll(ip.address().toString(), parseInt(serverPortNumber), "/blockchain/synchronyze", JSON.stringify(blockchain));
+		
+	}
+	
+}, 10000);
+
 
 //branje blockchaina iz shranjene datoteke (v )
 function readFromFile() {	//branje blockchaina iz datoteke kjer je shranjen - tisto samo naredi streznik
@@ -104,11 +118,9 @@ if(!isNaN(serverPortNumber)) {
     const server = httpServer.listen(parseInt(serverPortNumber), ip.address().toString(), function() {
         console.log("streznik za blockchain zagnan na: " + ip.address().toString() + ":" + serverPortNumber + "...");
     });	
-	
-	
+
 	//preberi blockchain iz datoteke, ce je shranjen (in ce sem jaz SA streznik)
 	readFromFile();
-	
 	
 	//posiljanje serveru da smo se vkljucili v omrezje
 	if(ip.address().toString() !== saServerIp || parseInt(serverPortNumber) !== saServerPort) {
@@ -118,7 +130,6 @@ if(!isNaN(serverPortNumber)) {
 		//pošiljanje strežniku, da smo se vključili v p2p omrežje
 		saSrv.sendHttpPost("/nodes/newConnection", JSON.parse(sendData));
 	}
-	
 }
 else {
     console.log("napaka: številku vrat vnesite le s pomočjo številk");
